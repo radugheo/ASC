@@ -1,0 +1,146 @@
+ // sa se implementeze procedura countmax
+// care primeste adresa unui array de elemente de tip long
+// primeste si dimensiunea acestui array
+// si determina, in %eax, numarul de aparitii al elementului maxim
+// %eax = countmax(*v, n)
+
+.data
+v: .long 45, 108, 108, 37, 108, 83, 48
+n: .long 7
+formatPrintf: .asciz "Elementul maxim apare de %d ori\n"
+.text
+.global main
+// trebuie sa folosesc in procedura reg. %ebp
+// lista reg. de restaurat: %ebx, %esi, %edi, %ebp, %esp
+countmax:
+pushl %ebp
+movl %esp, %ebp
+// %esp:%ebp:(%ebp v)(<adr de in>)(*v)(n)
+pushl %edi
+// %esp:(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+movl 8(%ebp), %edi # *v
+movl 12(%ebp), %edx # n
+// %eax = maxarray(%edi, %edx)
+pushl %edx
+pushl %edi
+call maxarray
+popl %edi
+popl %edx
+// acum am in %eax elementul maxim din array
+pushl %esi
+// %esp:(%esi v)(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+movl %eax, %esi # max din array
+xorl %eax, %eax # countmax
+// for (ecx = 0; ecx < edx; ecx++) {​ if (v[ecx] == esi) eax++ }​
+xorl %ecx, %ecx # pe post de index
+pushl %ebx
+// %esp:(%ebx v)(%esi v)(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+countmax_for:
+cmp %edx, %ecx
+je countmax_exit
+movl (%edi, %ecx, 4), %ebx
+cmp %esi, %ebx
+je found_max
+countmax_cont:
+incl %ecx
+jmp countmax_for
+found_max:
+incl %eax
+jmp countmax_cont
+countmax_exit:
+popl %ebx
+popl %esi
+popl %edi
+popl %ebp
+ret
+maxarray:
+pushl %ebp
+movl %esp, %ebp
+ pushl %edi
+ movl 8(%ebp), %edi
+movl 12(%ebp), %edx
+xorl %ecx, %ecx
+movl (%edi, %ecx, 4), %eax
+incl %ecx
+pushl %ebx
+maxarray_for:
+cmp %edx, %ecx
+je maxarray_exit
+movl (%edi, %ecx, 4), %ebx
+cmp %eax, %ebx
+jg change_max
+maxarray_cont:
+incl %ecx
+jmp maxarray_for
+change_max:
+movl %ebx, %eax
+jmp maxarray_cont
+maxarray_exit:
+popl %ebx
+popl %edi
+popl %ebp
+ret
+main:
+// %eax = countmax(*v, n)
+pushl n
+pushl $v
+call countmax
+popl %ebx
+popl %ebx
+// printf("Elementul maxim apare de %d ori\n", %eax);
+pushl %eax
+pushl $formatPrintf
+call printf
+popl %ebx
+popl %ebx
+et_exit:
+movl $1, %eax
+xorl %ebx, %ebx
+int $0x80
+​[13/12 11:03] BOGDAN MACOVEI
+    // sa se scrie o procedura sum_rec
+// care primeste un argument de tip long, x
+// si care calculeaza suma x + (x - 1) + ... + 0 in reg. %eax
+// utilizand apeluri recursive
+// sum_rec(4) = 4 + 3 + 2 + 1 + 0 = 10
+
+// pentru o procedura recursiva am nevoie de:
+// - un caz de oprire, cazul 0
+// - un pas de recursie, sum_rec(x - 1)
+.data
+x: .long 5
+formatPrintf: .asciz "Suma este %d\n"
+.text
+.global main
+sum_rec:
+pushl %ebp
+movl %esp, %ebp
+// %esp:%ebp:(%ebp v)(<adr de in>)(x)
+movl 8(%ebp), %ecx
+cmp $0, %ecx
+je sum_rec_exit
+addl %ecx, %eax
+// sum_rec(%ecx - 1)
+sub $1, %ecx
+pushl %ecx
+call sum_rec
+popl %ecx
+sum_rec_exit:
+popl %ebp
+ret
+main:
+xorl %eax, %eax
+// %eax = sum_rec(x)
+pushl x
+call sum_rec
+popl %ebx
+// printf("Suma este %d\n", %eax)
+pushl %eax
+pushl $formatPrintf
+call printf
+popl %ebx
+popl %ebx
+et_exit:
+movl $1, %eax
+xorl %ebx, %ebx
+int $0x80

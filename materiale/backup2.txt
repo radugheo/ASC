@@ -1,0 +1,270 @@
+.data
+	formatScanfInt: .asciz "%d"
+	formatPrintfInt: .asciz "%d "
+	formatNewLine: .asciz "\n"
+	
+	valueOne: .long 1
+	
+	v: .space 150
+	x: .space 150
+	f: .space 150
+	n: .space 4
+	N_3: .space 4
+	m: .space 4
+	k: .space 4
+	kv: .space 4
+    kw: .space 4
+	i: .space 4
+    j: .space 4
+    i_plus_m: .space 4
+	temp: .space 4
+.text
+
+print:
+    pushl %ebp
+	movl %esp, %ebp
+    mov $x, %esi
+    movl $1, %ecx
+    et_print_for:
+        cmp %ecx, N_3
+        jl et_print_ret
+
+        movl (%esi, %ecx, 4), %eax
+        
+        pushl %ecx
+        pushl %eax
+        pushl $formatPrintfInt
+        call printf
+        popl %ebx
+        popl %ebx
+        popl %ecx
+    et_print_for_cont:
+        incl %ecx
+        jmp et_print_for
+    et_print_ret:
+        popl %ebp
+        ret
+        jmp et_exit
+
+verif:
+    pushl %ebp
+	movl %esp, %ebp
+
+	pushl %edi
+	pushl %esi
+
+    mov $x, %esi
+    mov $v, %edi
+
+	movl 8(%ebp), %eax
+    movl %eax, kv
+    xorl %ecx, %ecx
+    movl $1, %ecx
+
+    et_verif_for_1:
+        cmp %ecx, kv
+        jl et_verif_dupa_for_1
+
+        cmp $0, (%edi, %ecx, 4)
+        jne et_verif_if_1
+
+        et_verif_for_1_cont:
+            incl %ecx
+            jmp et_verif_for_1
+        et_verif_if_1:
+            movl (%esi, %ecx, 4), %ebx
+            cmp (%edi, %ecx, 4), %ebx
+            jne et_verif_return_false
+            jmp et_verif_for_1_cont
+    et_verif_dupa_for_1:
+        movl $1, %ecx
+    et_verif_for_2:
+        cmp %ecx, kv
+        jl et_verif_return_true
+
+        movl %ecx, j
+        incl j
+
+        et_verif_for_3:
+            movl j, %edx
+
+            cmp %edx, kv
+            jl et_verif_for_2_cont
+            jmp et_verif_if_2
+
+        et_verif_for_2_cont:
+            incl %ecx
+            jmp et_verif_for_2
+        et_verif_if_2:
+            movl m, %eax
+            addl %ecx, %eax
+            movl %eax, i_plus_m
+
+            cmp %edx, i_plus_m
+            jl et_verif_for_2_cont
+            jmp et_verif_if_3
+
+            et_verif_if_3:
+                movl (%esi, %ecx, 4), %ebx
+                cmp (%esi, %edx, 4), %ebx
+                je et_verif_return_false
+                
+            et_verif_for_3_cont:
+                incl j
+                jmp et_verif_for_3
+    et_verif_return_true:
+        movl $1, %eax
+        popl %esi
+        popl %edi
+        popl %ebp
+        ret
+    et_verif_return_false:
+        movl $0, %eax
+        popl %esi
+        popl %edi
+        popl %ebp
+        ret
+    
+
+bkt:
+    pushl %ebp
+	movl %esp, %ebp
+    
+    pushl %edi
+	pushl %esi
+    
+    mov $f, %edi
+    mov $x, %esi
+   
+    movl $1, %ecx
+
+    et_bkt_for:
+        cmp %ecx, n 
+        jl et_bkt_exit
+
+        cmp $3, (%edi, %ecx, 4)
+        je et_bkt_for_cont
+
+        movl 8(%ebp), %edx
+        movl %edx, k
+        
+        movl %ecx, (%esi, %edx, 4)
+
+        pushl %ecx
+        pushl k
+        call verif
+        popl %ebx
+        popl %ecx
+
+        cmp $1, %eax
+        je et_bkt_if_1
+
+    et_bkt_for_cont:
+        incl %ecx
+        jmp et_bkt_for
+
+    et_bkt_if_1:
+        incl (%edi, %ecx, 4)
+        movl k, %eax
+
+        cmp %eax, N_3 # cmp k, 3*n
+        je et_bkt_print
+
+        pushl %ecx
+        movl 8(%ebp), %eax
+        incl %eax
+        pushl %eax
+        call bkt
+        popl %ebx
+        popl %ecx
+
+    et_bkt_if_1_cont:
+        decl (%edi, %ecx, 4)
+        jmp et_bkt_for_cont
+
+    et_bkt_print:
+        pushl %ecx
+        call print
+        popl %ecx
+
+        jmp et_bkt_exit
+
+    et_bkt_exit:
+        popl %esi
+        popl %edi
+        popl %ebp
+        ret
+
+.global main
+
+main:
+	mov $v, %esi
+    
+    pushl %ebx
+
+	pushl %ecx
+	pushl $n
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	popl %ecx
+	
+	movl n, %eax
+	addl n, %eax
+	addl n, %eax
+	movl %eax, N_3
+	
+	pushl %ecx
+	pushl $m
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	popl %ecx
+	
+    popl %ebx
+
+	movl $1, %ecx
+
+read_vector:
+	cmp %ecx, N_3
+	jl read_exit
+	
+	pushl %ecx
+	pushl $temp
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	popl %ecx
+
+	movl temp, %eax
+	movl %eax, (%esi, %ecx, 4)
+	
+	incl %ecx
+	jmp read_vector
+
+read_exit:
+    pushl %ecx
+    pushl %edx
+    pushl %esi
+    pushl %edi
+    pushl $1
+    call bkt
+    popl %ebx
+    popl %edi
+    popl %esi
+    popl %edx
+    popl %ecx
+
+et_exit:
+	pushl %ecx
+	pushl $formatNewLine
+	call printf
+	popl %ebx
+	popl %ecx
+	
+	movl $1, %eax
+	movl $0, %ebx
+	int $0x80

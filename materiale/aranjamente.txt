@@ -1,0 +1,181 @@
+.data
+	formatScanfInt: .asciz "%d"
+	formatPrintfInt: .asciz "%d "
+	formatNewLine: .asciz "\n"
+	
+	valueOne: .long 1
+	
+	v: .space 150
+	comb: .space 150
+	wasAdded: .space 40
+	n: .space 4
+	N_3: .space 4
+	m: .space 4
+	p: .space 4
+	i: .space 4
+	temp: .space 4
+	
+.text
+
+.global main
+
+read:
+	pushl %ebp
+	movl %esp, %ebp
+	
+	pushl %ebx
+	
+	pushl $n
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	
+	movl n, %eax
+	addl n, %eax
+	addl n, %eax
+	movl %eax, N_3
+	
+	pushl $m
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	
+	xorl %ecx, %ecx
+	
+	jmp read_exit
+	
+read_vector:
+	cmp %ecx, N_3
+	je read_exit
+	
+	pushl %ecx
+	
+	pushl $temp
+	pushl $formatScanfInt
+	call scanf
+	popl %ebx
+	popl %ebx
+	
+	popl %ecx
+	movl temp, %eax
+	movl %eax, (%esi, %ecx, 4)
+	
+	incl %ecx
+	jmp read_vector
+	
+read_exit:
+	popl %ebx
+	popl %ebp
+	ret
+
+bkt:
+	pushl %ebp
+	movl %esp, %ebp
+	
+	movl 8(%ebp), %eax
+	movl %eax, p
+	
+	cmp %eax, m
+	je bkt_afis
+	
+	movl $1, i
+	pushl i
+	
+bkt_for:
+	popl i
+	movl i, %ecx
+	
+	cmp %ecx, n
+	jl bkt_exit
+	
+	incl i
+	pushl i
+	
+	movb (%edi, %ecx, 1), %al
+	cmp %eax, valueOne
+	jne bkt_add
+	
+	jmp bkt_for
+	
+bkt_add:
+	movl $1, %eax
+	movb %al, (%edi, %ecx, 1)
+	
+	movl %ecx, %eax
+	movl p, %ecx
+	movl %eax, (%esi, %ecx, 4)
+	
+	incl %ecx
+	pushl %ecx
+	call bkt
+	popl %ecx
+	subl $1, %ecx
+	movl %ecx, p
+	
+	popl %ecx
+	subl $1, %ecx
+	movl $0, %eax
+	movb %al, (%edi, %ecx, 1)
+	
+	incl %ecx
+	pushl %ecx
+	
+	jmp bkt_for
+	
+bkt_exit:
+	popl %ebp
+	ret
+	
+bkt_post_afis:
+	pushl %ebx
+	pushl $formatNewLine
+	call printf
+	popl %ebx
+	popl %ebx
+	jmp bkt_exit
+	
+bkt_afis:
+	xorl %ecx, %ecx
+
+afis_vector:
+	cmp %ecx, m
+	je bkt_post_afis
+	
+	pushl %ecx
+	pushl %ebx
+	movl (%esi, %ecx, 4), %eax
+	
+	pushl %eax
+	pushl $formatPrintfInt
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	popl %ebx
+	popl %ecx
+	incl %ecx
+	jmp afis_vector
+
+main:
+	movl $v, %esi
+	call read
+	
+	movl $comb, %esi
+	movl $wasAdded, %edi
+	
+	pushl $0
+	call bkt
+	popl %ebx
+	
+	xorl %ecx, %ecx
+	
+et_exit:
+	pushl $formatNewLine
+	call printf
+	popl %ebx
+	
+	movl $1, %eax
+	movl $0, %ebx
+	int $0x80

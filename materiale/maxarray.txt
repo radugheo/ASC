@@ -1,0 +1,69 @@
+// sa se implementeze procedura maxarray
+// care primeste ca argumente adresa unui array de elemente intregi
+// numarul de elemente din array
+// si returneaza in reg. %eax elementul maxim
+// %eax = maxarray(*v, n)
+
+.data
+v: .long 45, 12, 108, 37, 99, 83, 48
+n: .long 7
+formatPrintf: .asciz "Elementul maxim este %d\n"
+.text
+
+.global main
+
+// trebuie sa folosesc in procedura reg. %ebp
+// lista reg. de restaurat: %ebx, %esi, %edi, %ebp, %esp
+maxarray:
+// %esp:(<adr de in>)(*v)(n)
+pushl %ebp
+movl %esp, %ebp
+// %esp:%ebp:(%ebp v)(<adr de in>)(*v)(n)
+// (%edi, %ecx, 4) <- v[i]
+pushl %edi
+// %esp:(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+movl 8(%ebp), %edi # *v
+movl 12(%ebp), %edx # n
+// eax = v[0]
+// for (ecx = 1; ecx < edx; ecx++) { if (v[ecx] > eax) { eax = v[ecx] } }
+xorl %ecx, %ecx # pe post de index
+movl (%edi, %ecx, 4), %eax
+incl %ecx
+pushl %ebx
+// %esp:(%ebx v)(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+maxarray_for:
+cmp %edx, %ecx
+je maxarray_exit
+movl (%edi, %ecx, 4), %ebx
+cmp %eax, %ebx
+jg change_max
+
+maxarray_cont:
+incl %ecx
+jmp maxarray_for
+change_max:
+movl %ebx, %eax
+jmp maxarray_cont
+
+maxarray_exit:
+popl %ebx
+popl %edi
+popl %ebp
+ret
+main:
+// %eax = maxarray(*v, n)
+pushl n
+pushl $v
+call maxarray
+popl %ebx
+popl %ebx
+// printf("Elementul maxim este %d\n", %eax);
+pushl %eax
+pushl $formatPrintf
+call printf
+popl %ebx
+popl %ebx
+et_exit:
+movl $1, %eax
+xorl %ebx, %ebx
+int $0x80

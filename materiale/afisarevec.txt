@@ -1,0 +1,18 @@
+afis_vector:
+	cmp %ecx, N_3
+	je et_exit
+	
+	pushl %ecx
+	pushl %ebx
+	movl (%esi, %ecx, 4), %eax
+	
+	pushl %eax
+	pushl $formatPrintfInt
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	popl %ebx
+	popl %ecx
+	incl %ecx
+	jmp afis_vector

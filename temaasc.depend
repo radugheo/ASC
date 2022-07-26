@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1641226868 source:c:\users\radu\desktop\temaasc\main.cpp
+	<fstream>
+	<algorithm>
+
